@@ -41,10 +41,12 @@
         public bool IsOpenFrame() => Roll1 + Roll2 < 10;
         public void CalculateFrameScore()
         {
-            if (IsOpenFrame()) FrameScore = Roll1 + Roll2;
-            if (IsSpareFrame()) FrameScore = 10 + Bonus1;
-            if (IsStrikeFrame()) FrameScore = 10 + Bonus1 + Bonus2;
-
+            if (IsComplete())
+            {
+                if (IsOpenFrame()) FrameScore = Roll1 + Roll2;
+                if (IsSpareFrame()) FrameScore = 10 + Bonus1;
+                if (IsStrikeFrame()) FrameScore = 10 + Bonus1 + Bonus2;
+            }
         }
     }
 }
