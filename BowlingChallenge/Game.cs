@@ -6,21 +6,20 @@ namespace BowlingChallenge
     {
         public Frame[] Frames { get; set; }
 
-        internal static void PrintTitle()
+        public static void PrintTitle()
         {
             FramePrinter.PrintTitle();
         }
 
         private FramePrinter Printer { get; set; }
-        public int TotalScore() => Frames.Aggregate(0, (total, frame) => total + (frame?.FrameScore ?? 0));
         public bool IsGameOver { get; set; } = false;
-        public bool IsProcessingLastFrame { get; set; } = false; 
-        
+        public bool ShouldProcessLastFrameRoll3 { get; set; } = false;
+        public int TotalScore() => Frames.Aggregate(0, (total, frame) => total + (frame?.FrameScore ?? 0));
+
         private int numPinsLeftStanding = 10;
 
         public Game()
         {
-            // extra frame to account for the 10th frame special case
             Frames = new Frame[10];
             for (int i = 0; i < Frames.Length; i++)
             {
@@ -59,47 +58,54 @@ namespace BowlingChallenge
         /// <param name="pinsKnockedDown"></param>
         private int ProcessRoll(int pinsKnockedDown)
         {
-            if (IsProcessingLastFrame) return Process3rdRoll(pinsKnockedDown);
+            if (ShouldProcessLastFrameRoll3)
+            {
+                return Process3rdRoll(pinsKnockedDown);
+            }
             for (int i = 0; i < Frames.Length; i++)
             {
-                var currentFrame = Frames[i];
-                if (currentFrame.IsComplete())
+                var f = Frames[i];
+                if (f.IsComplete())
                 {
                     continue;
                 }
 
                 // If our frame doesn't have a value for Roll1, populate it and await next roll
-                if (!currentFrame.Roll1.HasValue)
+                if (!f.Roll1.HasValue)
                 {
-                    currentFrame.Roll1 = pinsKnockedDown;
-                    return currentFrame.RemainingPins();
+                    f.Roll1 = pinsKnockedDown;
+                    return f.RemainingPins();
                 }
                 else
                 {
-                    // else, 1st roll was a strike - we have to set it's bonus
-                    // Note: If we're already on the last frame, we may be setting roll3
-                    if (currentFrame.IsStrikeFrame())
+                    // if 1st roll was a strike - we have to set it's bonus
+                    // Note: If we're already on the last frame, we should be setting roll3 after this roll
+                    if (f.IsStrikeFrame())
                     {
-                        HandleStrike(currentFrame, pinsKnockedDown);
-                        if (currentFrame.IsLastFrame())
+                        HandleStrike(f, pinsKnockedDown);
+                        if (f.IsLastFrame())
                         {
-                            IsProcessingLastFrame = true;
-                            return currentFrame.RemainingPins();
+                            ShouldProcessLastFrameRoll3 = true;
+                            return f.RemainingPins();
                         }
                     }
                     else
                     {
                         // if the 1st roll wasn't a strike, set the 2nd roll
-                        if (!currentFrame.Roll2.HasValue)
+                        if (!f.Roll2.HasValue)
                         {
-                            currentFrame.Roll2 = pinsKnockedDown;
+                            f.Roll2 = pinsKnockedDown;
                             // if 2nd roll didn't result in a spare, it's an open frame we can complete the frame score
-                            if (currentFrame.IsOpenFrame())
+                            if (f.IsOpenFrame())
                             {
-                                CalculateFrameScore(currentFrame);
+                                CalculateFrameScore(f);
                             }
                             // otherwise we've just rolled a spare, time to wait for the next roll
-                            if (currentFrame.IsLastFrame()) IsProcessingLastFrame = true;
+                            // if we're on the last frame, we want the next roll to be roll3
+                            if (f.IsLastFrame())
+                            {
+                                ShouldProcessLastFrameRoll3 = true;
+                            }
                             return 10;
                         }
                         // we previously got the spare, have to add current roll to the spare's bonus1
@@ -107,20 +113,28 @@ namespace BowlingChallenge
                         // to the next frame's roll1
                         else
                         {
-                            currentFrame.Bonus1 = pinsKnockedDown;
-                            if (currentFrame.IsLastFrame())
+                            f.Bonus1 = pinsKnockedDown;
+                            if (f.IsLastFrame())
                             {
-                                IsProcessingLastFrame = true;
+                                ShouldProcessLastFrameRoll3 = true;
                             }
-                            else { CalculateFrameScore(currentFrame); }
+                            else 
+                            { 
+                                CalculateFrameScore(f); 
+                            }
                         }
                     }
                 }
             }
-            IsProcessingLastFrame = true;
+            ShouldProcessLastFrameRoll3 = true;
             return -1;
         }
         
+        /// <summary>
+        /// On the 10th frame, if it's a strike or spare frame we need to allow a third roll
+        /// </summary>
+        /// <param name="pinsKnockedDown"></param>
+        /// <returns>-1 since this was the last roll of the game</returns>
         private int Process3rdRoll(int pinsKnockedDown)
         {
             var lastFrame = Frames[9];
@@ -134,33 +148,37 @@ namespace BowlingChallenge
                 lastFrame.Bonus2 = pinsKnockedDown;
                 lastFrame.Roll3 = pinsKnockedDown;
             }
-            CalculateFrameScore(Frames[9]);
+            CalculateFrameScore(lastFrame);
             return -1;
         }
-        private void CalculateFrameScore(Frame currentFrame)
+
+        private void CalculateFrameScore(Frame f)
         {
-            currentFrame.CalculateFrameScore();
-            if (currentFrame.IsLastFrame()) IsGameOver = true;
+            f.CalculateFrameScore();
+            if (f.IsLastFrame())
+            {
+                IsGameOver = true;
+            }
         }
 
-        private void HandleStrike(Frame currentFrame, int pinsKnockedDown)
+        private void HandleStrike(Frame f, int pinsKnockedDown)
         {
-            if (currentFrame.Bonus1 == null)
+            if (f.Bonus1 == null)
             {
-                currentFrame.Bonus1 = pinsKnockedDown;
-                if (currentFrame.IsLastFrame())
+                f.Bonus1 = pinsKnockedDown;
+                if (f.IsLastFrame())
                 {
-                    currentFrame.Roll2 = pinsKnockedDown;
+                    f.Roll2 = pinsKnockedDown;
                 }
             }
             else
             {
-                currentFrame.Bonus2 = pinsKnockedDown;
-                if (currentFrame.IsLastFrame())
+                f.Bonus2 = pinsKnockedDown;
+                if (f.IsLastFrame())
                 {
-                    currentFrame.Roll3 = pinsKnockedDown;
+                    f.Roll3 = pinsKnockedDown;
                 }
-                CalculateFrameScore(currentFrame);
+                CalculateFrameScore(f);
             }
         }
     }

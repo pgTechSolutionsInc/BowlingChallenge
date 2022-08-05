@@ -5,7 +5,6 @@ Game.PrintTitle();
 
 while (!game.IsGameOver)
 {
-    Console.ForegroundColor = ConsoleColor.Gray;
     Console.Write("How many pins to knock down?\t");
     var userInput = Console.ReadLine();
     if (userInput == "x")

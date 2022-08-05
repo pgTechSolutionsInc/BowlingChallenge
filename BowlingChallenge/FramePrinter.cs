@@ -23,7 +23,6 @@ namespace BowlingChallenge
         }
         internal static void PrintTitle()
         {
-            Console.ForegroundColor = ConsoleColor.Gray;
             Console.WriteLine("Welcome To Paul's Bowling Challenge");
             Console.ForegroundColor = ConsoleColor.Green;
             // Art by Joan Stark
@@ -88,14 +87,23 @@ namespace BowlingChallenge
             for (var i = 0; i < Frames.Length; i++)
             {
                 var currentFrame = Frames[i];
-                Console.Write($"|{FormattedRoll1(currentFrame),3}|{FormattedRoll2(currentFrame),3}");
-
-                // for 10th frame, lets squeeze in the 3rd roll if necessary
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.Write("|");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write($"{FormattedRoll1(currentFrame),3}");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.Write("|");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write($"{ FormattedRoll2(currentFrame),3}");
+                Console.ForegroundColor = ConsoleColor.White;
                 if (currentFrame.IsLastFrame())
                 {
-                    Console.Write($"|{FormattedRoll3(currentFrame),3}");
+                    Console.Write("|");
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.Write($"{FormattedRoll3(currentFrame),3}");
                 }
             }
+            Console.ForegroundColor = ConsoleColor.White;
             Console.Write(" |\n");
         }
         private void PrintFrameScores()
@@ -106,19 +114,26 @@ namespace BowlingChallenge
                 var scoreToDisplay = sumOfPreviousFrameScores > 0 && Frames[i].FrameScore.HasValue
                     ? sumOfPreviousFrameScores.ToString()
                     : "";
+                Console.ForegroundColor = ConsoleColor.White;
                 if (i == 9)
                 {
-                    Console.Write($"| {scoreToDisplay,7}   ");
+                    Console.Write("|");
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    Console.Write($" {scoreToDisplay,7}   ");
                 }
                 else
                 {
-                    Console.Write($"| {scoreToDisplay,3}   ");
+                    Console.Write("|");
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    Console.Write($" {scoreToDisplay,3}   ");
                 }
             }
+            Console.ForegroundColor = ConsoleColor.White;
             Console.Write(" |\n");
         }
         private void PrintFrameFooters()
         {
+            Console.ForegroundColor = ConsoleColor.White;
             for (var i = 0; i < Frames.Length; i++)
             {
                 var underscores = new string('_', i == 9 ? 11 : 7);
