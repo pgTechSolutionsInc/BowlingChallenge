@@ -5,11 +5,13 @@ namespace BowlingChallenge
     public class FramePrinter
     {
         private readonly Frame[] Frames;
+
         /// <summary>
         /// Recursively compute the sum of previous frames for display purposes
+        /// Begin on the current frame index and add up each previous frame's FrameScore
         /// </summary>
         /// <param name="currentIndex"></param>
-        /// <returns></returns>
+        /// <returns>The aggregate of current and all previous frame scores</returns>
         private int SumOfPreviousFrameScores(int currentIndex)
         {
             if (currentIndex == 0) return Frames[currentIndex]?.FrameScore ?? 0;
@@ -21,7 +23,11 @@ namespace BowlingChallenge
         }
         internal static void PrintTitle()
         {
-            Console.WriteLine("Welcome To Bowling");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.WriteLine("Welcome To Paul's Bowling Challenge");
+            Console.ForegroundColor = ConsoleColor.Green;
+            // Art by Joan Stark
+            //https://www.asciiart.eu/sports-and-outdoors/bowling
             Console.WriteLine(@"
   __  __  __  __
   )(__)(__)(__)(
@@ -34,6 +40,7 @@ namespace BowlingChallenge
        '--'  / .  \
              \'.  /
               '--'");
+            Console.ForegroundColor= ConsoleColor.Gray;
             Console.WriteLine("\n");
             Console.WriteLine("Press 'x' at any time to exit.");
         }
@@ -57,29 +64,36 @@ namespace BowlingChallenge
             }
             Console.Write("|\n");
         }
+        private static string HyphenizedZeros(string score) => Regex.Replace(score, @"\b0\b", "-");
+        private static string FormattedRoll1(Frame frame) => 
+            frame.IsStrikeFrame() ? 
+            "X" : 
+            HyphenizedZeros((frame?.Roll1.ToString() ?? ""));
+        private static string FormattedRoll2(Frame frame)
+        {
+            if (frame.IsSpareFrame()) return "/";
+            if (frame.IsLastFrame() && frame.Roll2 == 10) return "X";
+            return HyphenizedZeros((frame?.Roll2.ToString() ?? ""));
+        }
+        private static string FormattedRoll3(Frame frame)
+        {
+            if (frame.IsOpenFrame() || !frame.IsLastFrame() || !frame.Roll3.HasValue) return " ";
+            if (frame.Roll3 + frame.Roll2 == 10) return "/";
+            if (frame.Roll3 == 10) return "X";
+            return HyphenizedZeros(frame.Roll3.ToString() ?? "");
+
+        }
         private void PrintFrameRolls()
         {
             for (var i = 0; i < Frames.Length; i++)
             {
-                var roll1 = Frames[i].IsStrikeFrame() ? "X" : (Frames[i]?.Roll1.ToString() ?? "");
-                var formattedRoll1 = Regex.Replace(roll1, @"\b0\b", "-");
-                var roll2 = Frames[i].IsSpareFrame() ? "/" : (Frames[i]?.Roll2.ToString() ?? "");
-                var formattedRoll2 = Regex.Replace(roll2, @"\b0\b", "-");
-                Console.Write($"|{formattedRoll1,3}|{formattedRoll2,3}");
+                var currentFrame = Frames[i];
+                Console.Write($"|{FormattedRoll1(currentFrame),3}|{FormattedRoll2(currentFrame),3}");
 
                 // for 10th frame, lets squeeze in the 3rd roll if necessary
-                if (i == 9)
+                if (currentFrame.IsLastFrame())
                 {
-                    if (Frames[i].Roll3.HasValue)
-                    {
-                        var roll3 = Frames[i].IsStrikeFrame() ? "X" : Frames[i].IsSpareFrame() ? "/" : (Frames[i]?.Roll3.ToString() ?? "");
-                        var formattedRoll3 = Regex.Replace(roll3, @"\b0\b", "-");
-                        Console.Write($"|{formattedRoll3,3}");
-                    }
-                    else
-                    {
-                        Console.Write($"|{' ',3}");
-                    }
+                    Console.Write($"|{FormattedRoll3(currentFrame),3}");
                 }
             }
             Console.Write(" |\n");

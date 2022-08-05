@@ -10,7 +10,7 @@
         public int? Roll1 { get; set; }
         public int? Roll2 { get; set; }
         /// <summary>
-        /// only used for 10th frame
+        /// only used for 10th frame printing
         /// </summary>
         public int? Roll3 { get; set; }
 
@@ -23,6 +23,7 @@
         /// </summary>
         public int? Bonus2 { get; set; }
         public int? FrameScore { get; set; }
+        public int RemainingPins() => IsStrikeFrame() ? 10 : 10 - (Roll1 ?? 0);
         public bool IsComplete()
         {
             if (Roll1.HasValue)
@@ -37,8 +38,9 @@
             return false;
         }
         public bool IsStrikeFrame() => Roll1 == 10;
-        public bool IsSpareFrame() => Roll1 + Roll2 == 10;
-        public bool IsOpenFrame() => Roll1 + Roll2 < 10;
+        public bool IsSpareFrame() => !IsStrikeFrame() && Roll1 + Roll2 == 10;
+        public bool IsOpenFrame() => !IsStrikeFrame() && !IsSpareFrame();
+        public bool IsLastFrame() => FrameNumber == 10;
         public void CalculateFrameScore()
         {
             if (IsComplete())

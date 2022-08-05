@@ -1,10 +1,11 @@
-﻿// See https://aka.ms/new-console-template for more information
-using BowlingChallenge;
+﻿using BowlingChallenge;
 
 var game = new Game();
 Game.PrintTitle();
+
 while (!game.IsGameOver)
 {
+    Console.ForegroundColor = ConsoleColor.Gray;
     Console.Write("How many pins to knock down?\t");
     var userInput = Console.ReadLine();
     if (userInput == "x")
@@ -20,5 +21,4 @@ while (!game.IsGameOver)
         }
     }
 }
-Console.WriteLine("GAME OVER!");
 Console.WriteLine($"Final Score: {game.TotalScore()}");
